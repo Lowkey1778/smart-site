@@ -1,0 +1,27 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Java / Maven
+backend/target/
+*.class
+*.log
+
+# 前端
+node_modules/
+frontend/dist/
+
+# Python / AI
+ai-server/.venv/
+__pycache__/
+*.pyc
+ai-server/dump.rdb
+
+# 运行数据 / 构建产物
+backend/capture-data/
+release/
+
+# 系统
+.DS_Store
+Thumbs.db

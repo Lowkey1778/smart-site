@@ -1,0 +1,58 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: smart-site-backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 最小闭环：单机 MySQL；后续接入 Redis 作为会话/缓存（见项目计划书）
+    url: jdbc:mysql://localhost:3306/smart_site?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    # 本机 MySQL root 密码（也支持环境变量 DB_PASSWORD 覆盖）
+    password: ${DB_PASSWORD:1234}
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 3s
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    banner: false
+
+# JWT 配置（会话无状态化，最小闭环暂不引入 Redis 存储 token）
+jwt:
+  secret: SmartSite2026SecretKeyForJwtSigningMustBeLongEnough!123
+  expire-hours: 24
+
+# AI 智能识别服务配置
+ai:
+  server-url: http://localhost:5000          # Flask AI 推理服务
+  predict-url: http://localhost:5001         # 塔吊安全状态预测服务（T-33，CNN+LSTM+Attention）
+  ffmpeg-path: D:/work/tools/videoUtil/ffmpeg/bin/ffmpeg.exe  # 视频截帧工具（本机实际安装路径）
+  capture-dir: D:/work/smart-site/backend/capture-data/ai-capture  # 告警截图目录(独立数据目录, 经 /ai-capture/** 映射可访问)
+  interval-ms: 30000                         # 截帧检测周期(毫秒)
+
+# 设备通信模拟平台（T-32 / 接口章节 4.2）：TCP 服务端配置
+iot:
+  tcp-port: 9001                             # 模拟设备 TCP 长连接上报端口
+
+# Coze 智能体（T-31 / RQ-38）
+# 留空时自动降级为本地知识引擎（基于系统真实数据回答）；填入 Token 与 Bot ID 后接入真实 Coze 智能体
+coze:
+  api-token: ""                              # Coze 开放平台 API Token（https://www.coze.cn/open/）
+  bot-id: ""                                 # 智能体 Bot ID
+  base-url: https://api.coze.cn              # 国内版地址；海外版为 https://api.coze.com

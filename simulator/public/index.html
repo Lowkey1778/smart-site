@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>设备通信模拟平台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Microsoft YaHei', sans-serif; background: #f0f2f5; padding: 24px; }
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    .sub { color: #909399; font-size: 13px; margin-bottom: 20px; }
+    .cards { display: flex; gap: 16px; margin-bottom: 20px; }
+    .card { flex: 1; background: #fff; border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .card .num { font-size: 26px; font-weight: 700; color: #409EFF; }
+    .card .label { color: #909399; font-size: 13px; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    th, td { padding: 10px 14px; text-align: left; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+    th { background: #fafafa; color: #606266; font-weight: 600; }
+    .tag { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 12px; }
+    .tag.ok { background: #f0f9eb; color: #67c23a; }
+    .tag.err { background: #fef0f0; color: #f56c6c; }
+    pre { background: #f8f8f8; border-radius: 4px; padding: 8px; font-size: 11px; max-width: 420px; white-space: pre-wrap; word-break: break-all; margin: 0; }
+    .section-title { font-size: 15px; font-weight: 600; margin: 20px 0 10px; }
+  </style>
+</head>
+<body>
+  <h1>设备通信模拟平台</h1>
+  <div class="sub">Express 控制台 + TCP 长连接模拟设备上报（接口章节 4.2）· 数据上报至后端 TCP 9001 端口</div>
+
+  <div class="cards">
+    <div class="card"><div class="num" id="c-devices">-</div><div class="label">模拟设备数</div></div>
+    <div class="card"><div class="num" id="c-online">-</div><div class="label">当前在线设备</div></div>
+    <div class="card"><div class="num" id="c-reports">-</div><div class="label">累计上报报文</div></div>
+    <div class="card"><div class="num" id="c-last">-</div><div class="label">最近上报时间</div></div>
+  </div>
+
+  <div class="section-title">设备连接状态</div>
+  <table>
+    <thead>
+      <tr><th>设备编码</th><th>设备名称</th><th>类型</th><th>TCP 连接</th><th>连接时间</th><th>累计上报</th><th>最近上报时间</th></tr>
+    </thead>
+    <tbody id="device-body"></tbody>
+  </table>
+
+  <div class="section-title">最近上报报文</div>
+  <table>
+    <thead>
+      <tr><th>设备</th><th>报文内容</th></tr>
+    </thead>
+    <tbody id="payload-body"></tbody>
+  </table>
+
+  <script>
+    async function refresh() {
+      try {
+        const res = await fetch('/api/status');
+        const s = await res.json();
+        document.getElementById('c-devices').textContent = s.devices.length;
+        const online = s.devices.filter(d => d.connected).length;
+        document.getElementById('c-online').textContent = online + ' / ' + s.devices.length;
+        document.getElementById('c-reports').textContent = s.totalReports;
+        const last = s.devices.map(d => d.lastReportTime).filter(Boolean).sort().pop();
+        document.getElementById('c-last').textContent = last ? new Date(last).toLocaleTimeString() : '-';
+
+        document.getElementById('device-body').innerHTML = s.devices.map(d => `
+          <tr>
+            <td><b>${d.deviceCode}</b></td>
+            <td>${d.name}</td>
+            <td>${d.type}</td>
+            <td><span class="tag ${d.connected ? 'ok' : 'err'}">${d.connected ? '在线' : '离线'}</span></td>
+            <td>${d.connectTime ? new Date(d.connectTime).toLocaleTimeString() : '-'}</td>
+            <td>${d.reportCount}</td>
+            <td>${d.lastReportTime ? new Date(d.lastReportTime).toLocaleTimeString() : '-'}</td>
+          </tr>
+        `).join('');
+
+        const recent = s.devices.filter(d => d.lastPayload).map(d => ({ code: d.deviceCode, p: d.lastPayload })).reverse().slice(0, 8);
+        document.getElementById('payload-body').innerHTML = recent.length
+          ? recent.map(r => `<tr><td><b>${r.code}</b></td><td><pre>${r.p}</pre></td></tr>`).join('')
+          : '<tr><td colspan="2">暂无上报报文</td></tr>';
+      } catch (e) {
+        // 平台未启动时忽略
+      }
+    }
+    refresh();
+    setInterval(refresh, 2000);
+  </script>
+</body>
+</html>

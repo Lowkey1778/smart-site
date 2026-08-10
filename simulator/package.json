@@ -1,0 +1,12 @@
+{
+  "name": "smart-site-simulator",
+  "version": "1.0.0",
+  "description": "设备通信模拟平台（接口章节4.2）：Express 控制台 + TCP 长连接模拟设备上报",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

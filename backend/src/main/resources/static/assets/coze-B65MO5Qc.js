@@ -1,0 +1,1 @@
+import{i as o}from"./index-4sP2pwVB.js";const s=t=>o.post("/coze/chat",t),c=()=>o.get("/coze/quick-questions"),n=()=>o.get("/coze/config"),i=t=>o.put("/coze/config",t),g=()=>o.get("/iot/overview"),a=()=>o.get("/iot/connections"),r=t=>o.get("/iot/records",{params:t});export{a,r as b,c,s as d,n as e,g,i as s};
